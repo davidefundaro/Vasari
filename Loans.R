@@ -47,3 +47,5 @@ Posizioni_selected_raw <- Posizioni_selected_raw %>%
     type == "mutuo" ~ "mortgages",
     TRUE ~ as.factor(type)
   ))
+
+Loans <- Posizioni_selected_raw

@@ -97,3 +97,7 @@ merged_table$name <- gsub("\\s+"," ",merged_table$name)
 merged_table$name <- gsub("\\*\\.\\*|time house", " ",merged_table$name)
 
 merged_table$name <- gsub("\\s+$", "", merged_table$name)
+
+counterparties_finished <- merged_table
+
+counterparties_finished <- counterparties_finished %>% rename(n.entities = n_entities)

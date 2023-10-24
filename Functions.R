@@ -142,3 +142,104 @@ create_area_city <- function(table, key1) {
   }
   return(table)
 }
+
+add_age_column <- function(data) {
+  result <- data %>%
+    mutate(
+      is_individual = nchar(cf.piva) == 16,
+      age = case_when(
+        is_individual ~ {
+          year_of_birth <- as.numeric(stringr::str_sub(cf.piva, start = 7L, end = 8L))
+          current_year <- as.numeric(format(Sys.Date(), "%Y"))
+          ifelse(
+            year_of_birth >= 0 & year_of_birth <= (current_year - 2018),
+            current_year - (2000 + year_of_birth),
+            current_year - (1900 + year_of_birth)
+          )
+        },
+        TRUE ~ NA_real_
+      )
+    ) %>%
+    select(-is_individual)
+  
+  return(result)
+}
+# Running example:
+#ENTITIES <- add_age_column(ENTITIES)
+
+
+
+# Define the age categories based on the age column
+add_age_range_column <- function(data) {
+  breaks <- c(0, 25, 50, 65, 75, Inf)
+  labels <- c("0-25", "25-50", "50-65", "65-75", "75+")
+  result <- data %>%
+    mutate(
+      range.age = cut(age, breaks = breaks, labels = labels, right = FALSE)
+    )
+  return(result)
+}
+# Running example:
+#ENTITIES <- add_age_range_column(ENTITIES)
+
+
+
+
+
+#Creates a type_subject_column based on the cf.piva column
+add_type_subject_column <- function(data) {
+  result <- data %>%
+    mutate(
+      type.subject = ifelse(
+        is.na(cf.piva) | cf.piva == "",
+        "individual",
+        ifelse(
+          grepl("^[A-Za-z0-9]{16}$", cf.piva),  # 16 letters and numbers
+          "individual",
+          ifelse(
+            grepl("^[0-9]{11}$", cf.piva),  # 11 numbers
+            "corporate",
+            "other"
+          )
+        )
+      )
+    )
+  
+  return(result)
+}
+# Running example:
+# ENTITIES <- add_type_subject_column(ENTITIES)
+
+
+
+add_sex_column <- function(data) {
+  result <- data %>%
+    mutate(sex = case_when(
+      !is.na(type.subject) & type.subject == "individual" & as.numeric(str_sub(cf.piva, start = 10L, end = 11L)) > 40 ~ "f",
+      !is.na(type.subject) & type.subject == "individual" & as.numeric(str_sub(cf.piva, start = 10L, end = 11L)) <= 40 ~ "m",
+      TRUE ~ NA_character_
+    ))
+  return(result)
+}
+# Running example:
+# ENTITIES <-   add_sex_column (ENTITIES)
+
+
+
+add_type.pg_column <- function(data) {
+  result <- data %>%
+    mutate(type.pg = case_when(
+      type.subject == "corporate" ~ case_when(
+        str_detect(name, "srl|s.r.l|s.r.l.|srls")  ~ "srl",
+        str_detect(name, "d.i|d.i.")  ~ "di",
+        str_detect(name, " ss |s.s|s.s.|societa' semplice")  ~ "ss",
+        str_detect(name, " sas |s.a.s|s.a.s.")  ~ "sas",
+        str_detect(name, "snc|s.n.c|s.n.c.|sncs")  ~ "snc",
+        str_detect(name, " sc |s.c|s.c.|scs")  ~ "sc",
+        TRUE ~ "other"  # Catch-all condition for "corporate"
+      ),
+      TRUE ~ NA_character_
+    ))
+  
+  return(result)
+}

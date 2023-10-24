@@ -50,3 +50,30 @@ filtered_df <- filtered_df %>% mutate(id.entities = paste0("e",row_number()))
 filtered_df <- filtered_df %>% rename(id.bor = ndg)
 
 filtered_df <- filtered_df %>% rename(namer = nome)
+
+entities <- filtered_df
+
+entities <- entities %>% rename(cf.piva = codice_fiscale)
+
+entities <- entities %>% rename(name = namer)
+
+entities <- create_region_city(entities,entities$comune)
+
+entities <- create_area_city(entities,entities$comune)
+
+entities <- add_type_subject_column(entities)
+
+entities <- add_sex_column(entities)
+
+entities <- add_age_column(entities)
+
+entities <- add_age_range_column(entities)
+
+entities <- add_type.pg_column(entities)
+
+entities_final <- entities %>% rename(province = provincia,city = comune)
+
+entities_final[] <- lapply(entities_final,tolower)
+
+entities_final <- entities_final %>% mutate(dummy.info = NA_real_,solvency.pf = NA_real_,income.pf = NA_real_,
+                                            status.pg = NA_real_,date.cessation = NA_real_,flag.imputed = NA_real_)
