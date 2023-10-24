@@ -1,8 +1,6 @@
 #Garanzie_unique <- Garanzie_Raw %>% distinct()
 
-Garanzie_unique$role <- "guarantor"
-
-Garanzie_new <- Garanzie_unique %>% select(NDG,`Intestazione garante`,role)
+Garanzie_new <- Garanzie_Raw %>% select(NDG,`Intestazione garante`)
 
 Garanzie_new$`Intestazione garante` <- gsub("\\s+"," ",Garanzie_new$`Intestazione garante`)
 

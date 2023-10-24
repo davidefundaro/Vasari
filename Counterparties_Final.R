@@ -91,3 +91,9 @@ merged_table <- merged_table %>% mutate(id.counterparty = paste0("c",row_number(
 merged_table$id.group <- NA_real_
 
 merged_table$flag.imputed <- NA_real_
+
+merged_table$name <- gsub("\\s+"," ",merged_table$name)
+
+merged_table$name <- gsub("\\*\\.\\*|time house", " ",merged_table$name)
+
+merged_table$name <- gsub("\\s+$", "", merged_table$name)

@@ -2,6 +2,8 @@
 #install.packages('openxlsx',repos ='https://cloud.r-project.org' )
 #install.packages("feather",repos ='https://cloud.r-project.org' )
 #install.packages("explore")
+#install.packages("purrr")
+library(purrr)
 library(explore)
 #library(feather)
 library(generics)
