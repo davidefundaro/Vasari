@@ -18,10 +18,11 @@ test <- test %>% rename(id.bor = ndg, name = combined_names)
 
 counterparty_idbor_name <- test %>% select(id.bor,intestaz..unica...rag..soc.,name)
 
-counterparty_idbor_name$intestaz..unica...rag..soc. <- gsub("\\*\\.\\*|time house"," ",counterparty_idbor_name$intestaz..unica...rag..soc.)
-counterparty_idbor_name$intestaz..unica...rag..soc. <- gsub("\\s+", " ",counterparty_idbor_name$intestaz..unica...rag..soc.)
-counterparty_idbor_name$intestaz..unica...rag..soc. <- gsub("\\s+$", "", counterparty_idbor_name$intestaz..unica...rag..soc.)
+counterparty_idbor_name$name <- gsub("\\*\\.\\*|time house", " ",counterparty_idbor_name$name)
+counterparty_idbor_name$name <- gsub("\\s+", " ",counterparty_idbor_name$name)
+counterparty_idbor_name$name <- gsub("\\s+$", "", counterparty_idbor_name$name)
 
+######## SE NON FUNZIONA FARE LA STESSA COSA PER INTESTAZIONE COLONNA #####
 
 counterparty_idbor_name2 <- divide_column_by_character(counterparty_idbor_name,"name",",")
 
