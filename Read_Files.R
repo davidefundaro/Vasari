@@ -18,3 +18,13 @@ paths_content <- readLines("File/file_paths.txt")
 GeoMetadata_line <- grep("^GeoMetadata", paths_content)
 GeoMetadata_value <- sub("^GeoMetadata=\\s*", "", paths_content[GeoMetadata_line])
 GeoData <- read_excel(GeoMetadata_value, sheet = "Geo")
+
+paths_content <- readLines("File/file_paths.txt")
+infoprovide_cf_line <- grep("^Foglio1", paths_content)
+infoprovide_cf_value <- sub("^Foglio1=\\s*", "", paths_content[infoprovide_cf_line])
+infoproviding_cf <- read_excel(infoprovide_cf_value, sheet = "Foglio1")
+
+paths_content <- readLines("File/file_paths.txt")
+infoprovide_piva_line <- grep("^Worksheet", paths_content)
+infoprovide_piva_value <- sub("^Worksheet=\\s*", "", paths_content[infoprovide_piva_line])
+infoproviding_piva <- read_excel(infoprovide_piva_value, sheet = "Worksheet")

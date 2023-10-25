@@ -230,16 +230,57 @@ add_type.pg_column <- function(data) {
   result <- data %>%
     mutate(type.pg = case_when(
       type.subject == "corporate" ~ case_when(
+        str_detect(name, "spa|s.p.a|s.p.a.|spas")  ~ "spa",
         str_detect(name, "srl|s.r.l|s.r.l.|srls")  ~ "srl",
         str_detect(name, "d.i|d.i.")  ~ "di",
         str_detect(name, " ss |s.s|s.s.|societa' semplice")  ~ "ss",
         str_detect(name, " sas |s.a.s|s.a.s.")  ~ "sas",
         str_detect(name, "snc|s.n.c|s.n.c.|sncs")  ~ "snc",
-        str_detect(name, " sc |s.c|s.c.|scs")  ~ "sc",
-        TRUE ~ "other"  # Catch-all condition for "corporate"
+        str_detect(name, " sc |s.c|s.c.|scs|consor|sportiva")  ~ "sc",
+        TRUE ~ "Other"  # Catch-all condition for "corporate"
       ),
       TRUE ~ NA_character_
     ))
   
   return(result)
 }
+
+fct.emp <- function(x) { 
+  
+  # base irpef (RAL - 9% contributi) 
+  
+  y <- x * 12 * (1 - 0.09)  
+  
+  # aliquote progressive 
+  
+  x.1 <- 15*10^3 
+  
+  x.2 <- 28*10^3 
+  
+  x.3 <- 50*10^3 
+  
+  p.1 <- 0.23 
+  
+  p.2 <- 0.25 
+  
+  p.3 <- 0.35 
+  
+  p.4 <- 0.43 
+  
+  # calcolo tasse 
+  
+  t.1 <- pmin(y, x.1) %>% pmax(0) * p.1 
+  
+  t.2 <- pmin(y - x.1, x.2 - x.1) %>% pmax(0) * p.2 
+  
+  t.3 <- pmin(y - x.2, x.3 - x.2) %>% pmax(0) * p.3 
+  
+  t.4 <- pmin(y - x.3) %>% pmax(0) * p.4 
+  
+  # importo netto 
+  
+  z <- (y - (t.1+t.2+t.3+t.4))/12 
+
+  return(z) 
+  
+} 

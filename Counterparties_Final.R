@@ -101,3 +101,16 @@ merged_table$name <- gsub("\\s+$", "", merged_table$name)
 counterparties_finished <- merged_table
 
 counterparties_finished <- counterparties_finished %>% rename(n.entities = n_entities)
+
+
+######################################
+##### CHANGING DATA TYPE 
+#####################################
+
+columns_to_convert <- c("role")
+counterparties_finished[columns_to_convert] <- lapply(counterparties_finished[columns_to_convert], as.factor)
+
+counterparties_finished$id.group <- as.character(counterparties_finished$id.group)
+
+columns_to_convert <- c("n.entities", "flag.imputed")
+counterparties_finished[columns_to_convert] <- lapply(counterparties_finished[columns_to_convert], as.integer)

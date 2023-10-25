@@ -53,8 +53,12 @@ counterparty_idbor_name3 <- counterparty_idbor_name3 %>% distinct()
 
 counterparty_idbor_name3 <- counterparty_idbor_name3 %>% rename(namer = name.entities.y)
 
+df <- entities_complete 
+df <- df %>% rename(namer = name)
 
-link_table <- left_join(counterparty_idbor_name3,filtered_df,by = "namer")
+
+################################################# HERE CHANGE
+link_table <- left_join(counterparty_idbor_name3,df,by = "namer")
 
 
 link_table_entities_counterparties <- link_table %>% select(id.counterparty,id.entities)

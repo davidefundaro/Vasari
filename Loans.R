@@ -49,3 +49,15 @@ Posizioni_selected_raw <- Posizioni_selected_raw %>%
   ))
 
 Loans <- Posizioni_selected_raw
+
+#####################
+## CHANGING DATA TYPE
+######################
+
+columns_to_convert <- c("type", "status")
+Loans[columns_to_convert] <- lapply(Loans[columns_to_convert], as.factor)
+
+columns_to_convert <- c("date.origination", "date.last.act")
+Loans[columns_to_convert] <- lapply(Loans[columns_to_convert], as.Date)
+
+Loans$flag.imputed <- as.integer(Loans$flag.imputed)
