@@ -211,26 +211,58 @@ Profile_infoprov_pg <- Profile_infoprov_pg %>% rename("Variable" = "Variable_Nam
 Profile_infoprov_pg$`% NAs` <- paste0(Profile_infoprov_pg$`% NAs` *100, "%")
 Profile_infoprov_pg <- Profile_infoprov_pg %>% select(-NAs)
 
-#infoprov_cf_final  n_distinct(solvency.asj) per region, sum or % of income.net per solvency.asj class
-
+#infoprov_cf_final  n.cases per solvency type
 chart.info.pf.solvency.region <- infoprov_pf_final %>% 
-  group_by(region, solvency.adj) %>% 
-  summarise(cases = sum(!is.na(solvency.adj), na.rm = TRUE))
+  group_by(solvency.adj) %>% 
+  summarise(cases = n())
+
+my.palette <- c("#97FFFF", "#79CDCD", "#528B8B")
+
+chart.solvency.class.cases <- ggplot(chart.info.pf.solvency.region, aes(x = solvency.adj, y= cases)) +  
+  geom_col(aes(fill = solvency.adj), color= "black") +  
+  labs(title = "Solvency Adjusted N Cases", x = "Solvency Type", y= "N Cases") +  
+  scale_fill_manual(values = my.palette) + geom_text(aes(label = cases), vjust = 1.5, size = 5)
+chart.solvency.class.cases
+
+#mean income.net per solvency type
+table.info.income.solvency <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
+  group_by(solvency.adj) %>% 
+  summarise(mean_income = mean(income.net))
+table.info.income.solvency <- table.info.income.solvency %>% rename("Solvency Type" = solvency.adj,
+                                                                    "Mean Net Income" = mean_income)
+
+table.info.income.region <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
+  group_by(region) %>% summarise(mean_income = mean(income.net)) %>% arrange(desc(mean_income))
+table.info.income.region <- table.info.income.region %>% rename("Region" = region,
+                                                                    "Mean Net Income" = mean_income)
+
+#infoprov_piva_final 
+#% of status per type of corporate
+
+table.info.piva.type <- infoprov_piva_final %>% filter(!is.na(type)) %>% group_by(type, status) %>%
+  summarise(cases= n())
+
+table.info.piva.type <- table.info.piva.type %>% pivot_wider(names_from= status, values_from = cases,
+                                                             id_expand = FALSE)
+table.info.piva.type[is.na(table.info.piva.type)] <- 0
 
 
 
+rowtotals <- rowSums(table.info.piva.type[,-1])
+table.info.piva.type2 <- round(table.info.piva.type[,-1]/rowtotals*100,2)
+table.info.piva.type2 <- table.info.piva.type2 %>% mutate(type = table.info.piva.type$type)
+table.info.piva.type2 <- table.info.piva.type2[, c(7,1:6)]
+table.info.piva.type <- table.info.piva.type2
 
-#infoprov_piva_final n(status) per type
-
-
-
-
-
-
-
+#n.cases status per region
 
 
+table.info.piva.status.region <- infoprov_piva_final %>% filter(!is.na(status)) %>%
+  group_by(region, status) %>% summarise(cases = n()) %>% arrange(desc(cases))
+table.info.piva.status.region <- table.info.piva.status.region %>% pivot_wider(names_from= status, values_from = cases,
+                                                             id_expand = FALSE)
 
+table.info.piva.status.region[is.na(table.info.piva.status.region)] <- 0
 
 ###-----------------------------------------------------------------------###
 #-----                     Page 29 report                                -----         
