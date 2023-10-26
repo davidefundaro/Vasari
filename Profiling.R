@@ -58,7 +58,7 @@ r.introductionP6 <- Loans %>%
   summarise(
     '# Borrowers' = n_distinct(id.bor),
     '# LOANS' = n_distinct(id.loans),
-    'GBV (m)' = round(sum(gbv.residual) / 1e6, 1),  # Round GBV to 2 decimal places and convert to millions
+    'GBV (M)' = round(sum(gbv.residual) / 1e6, 1),  # Round GBV to 2 decimal places and convert to millions
     'Average Borrower size (k)' = round(sum(gbv.residual) / n_distinct(id.bor) / 1e3, 1),  # Round average borrower size to 2 decimal places and convert to thousands
     'Average loan size (k)' = round(sum(gbv.residual) / n_distinct(id.loans) / 1e3, 1)  # Round average loan size to 2 decimal places and convert to thousands
   )
@@ -163,9 +163,9 @@ r.p28.g.gbvByLoanSize
 
 gg <- ggplot(Borrowers, aes(x = gbv.residual)) +
   geom_histogram(binwidth = 150000, fill = "lightblue", color = "black") +
-  xlab("Values") +
-  ylab("Frequency") +
-  ggtitle("Histogram of Values")
+  xlab("GBV Amount") +
+  ylab("Loans Number") +
+  ggtitle("Loans Number by Amount")
 gg
 
 ###-----------------------------------------------------------------------###
