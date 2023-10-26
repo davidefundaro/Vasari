@@ -284,3 +284,10 @@ fct.emp <- function(x) {
   return(z) 
   
 } 
+
+
+checkcolumns <- function(col1, col2) {
+  not_in_col2 <- col1[!(col1 %in% col2)]
+  result <- list(match = all(col1 %in% col2), not_in_col2 = not_in_col2)
+  return(result)
+}

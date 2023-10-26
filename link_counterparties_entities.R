@@ -65,3 +65,4 @@ link_table_entities_counterparties <- link_table %>% select(id.counterparty,id.e
 
 link_table_entities_counterparties <- link_table_entities_counterparties %>% distinct()
 
+
