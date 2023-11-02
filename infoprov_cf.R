@@ -1,7 +1,8 @@
 
+#select the data needed for pf and pg
+pf <- entities_complete %>% filter(type.subject == "individual")
 
-pf <- entities_complete[nchar(entities_complete$cf.piva) == 16, ] ### CODICE FISCALE
-pg <- entities_complete[nchar(entities_complete$cf.piva) < 16, ] #### PARTITA IVA
+pg <- entities_complete %>% filter(type.subject == "corporate" | type.subject == "confidi")
 
 
 pf <- pf %>% select(cf.piva,name,city,province,region)
@@ -18,7 +19,7 @@ colnames(infoprov1) <- tolower(colnames(infoprov1))
 infoprov1 <- infoprov1 %>% rename(cf.piva = cf_piva)
 
 
-infoprov2 <- left_join(entities_complete,infoprov1,by = "cf.piva")
+infoprov2 <- left_join(pf,infoprov1,by = "cf.piva")
 
 infoprov2 <- infoprov2 %>% mutate(data.infoprov = "2023-07-12")
 
@@ -36,6 +37,8 @@ infoprov2 <- infoprov2 %>%
     )
   )
 
+#eliminate duplicates
+infoprov2 <- infoprov2[!duplicated(infoprov2), ]
 
 infoprov2$`emolumenti mensili lordi` <- sub(" / .*|/.*", "", infoprov2$`emolumenti mensili lordi`)
  
@@ -73,3 +76,16 @@ infoprov_pf_final <- infoprov4 %>% select(cf.piva,data.infoprov,name,solvency.ba
 
 infoprov_pf_final <- infoprov_pf_final %>% rename(date.infoprov = data.infoprov,income.gross = `emolumenti mensili lordi`,
                                                   province = prov , region = region.y)
+
+
+#change columns format
+
+columns_to_transform <- c("solvency.base", "solvency.adj", "province", "region")
+
+infoprov_pf_final[columns_to_transform] <- lapply(infoprov_pf_final[columns_to_transform], as.factor)
+
+columns_to_transform <- c("income.gross", "income.net")
+
+infoprov_pf_final[columns_to_transform] <- lapply(infoprov_pf_final[columns_to_transform], as.numeric)
+
+infoprov_pf_final$date.infoprov <- infoprov_pf_final$date.infoprov %>% as.Date()

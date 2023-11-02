@@ -1,4 +1,4 @@
-infoprov_piva <- entities_complete %>% select(cf.piva,name,type.pg,status.pg,date.cessation,city,province,region)
+infoprov_piva <- pg %>% select(cf.piva,name,type.pg,status.pg,date.cessation,city,province,region)
 
 infoprov_piva <- left_join(infoprov_piva,GeoData_selected,by = "province")
 
@@ -36,3 +36,14 @@ infoprov_piva1 <- infoprov_piva1 %>%
 infoprov_piva_final <- infoprov_piva1 %>% select(-status.y,-status.x)
 
 infoprov_piva_final <- infoprov_piva_final %>% rename(type = type.pg)
+
+
+#change columns format
+
+columns_to_transform <- c("type", "status", "province", "region")
+
+infoprov_piva_final[columns_to_transform] <- lapply(infoprov_piva_final[columns_to_transform], as.factor)
+
+columns_to_transform <- c("date.infoprov", "date.cessation")
+
+infoprov_piva_final[columns_to_transform] <- lapply(infoprov_piva_final[columns_to_transform], as.Date)

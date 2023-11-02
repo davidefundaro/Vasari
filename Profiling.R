@@ -4,7 +4,7 @@ source("Functions_Orange.R")
 ###------------------------------------------###
 
 possible_keys_LOANS <- possiblePKs(Loans)
-possible_keys_COUNTERPARTIES <- possiblePKs(counterparties_finished)
+possible_keys_COUNTERPARTIES <- possiblePKs(counterparty_finished)
 print(possible_keys_LOANS)
 print(possible_keys_COUNTERPARTIES)
 
@@ -39,7 +39,7 @@ Profile_Numeric$`Var (M)` <- round(Profile_Numeric$`Var (M)`/1000000, 2)
 Profile_Numeric <- Profile_Numeric %>% select(-NAs)
 
 #profile for COUNTERPARTIES
-Profile_COUNTERPARTIES <- ExpData(data=counterparties_finished,type=2) %>% as.data.frame()
+Profile_COUNTERPARTIES <- ExpData(data=counterparty_finished,type=2) %>% as.data.frame()
 Profile_COUNTERPARTIES <- Profile_COUNTERPARTIES %>% rename("Variable" = "Variable_Name", "Type" = "Variable_Type",
                                               "N Entries" = "Sample_n", "NAs" = "Missing_Count", 
                                               "% NAs" ="Per_of_Missing", "N Classes" ="No_of_distinct_values")
@@ -51,30 +51,129 @@ Profile_COUNTERPARTIES$`% NAs` <- paste0(Profile_COUNTERPARTIES$`% NAs` *100, "%
 #########################################
 
 ###-----------------------------------------------------------------------###
-#-----                     Page 6 report                                 -----         
+#-----             Loans                     -----         
 ###-----------------------------------------------------------------------###
 #summary table for totals
 r.introductionP6 <- Loans %>% 
   summarise(
-    '# Borrowers' = n_distinct(id.bor),
-    '# LOANS' = n_distinct(id.loans),
+    'N Borrowers' = n_distinct(id.bor),
+    'N LOANS' = n_distinct(id.loan),
     'GBV (M)' = round(sum(gbv.residual) / 1e6, 1),  # Round GBV to 2 decimal places and convert to millions
     'Average Borrower size (k)' = round(sum(gbv.residual) / n_distinct(id.bor) / 1e3, 1),  # Round average borrower size to 2 decimal places and convert to thousands
-    'Average loan size (k)' = round(sum(gbv.residual) / n_distinct(id.loans) / 1e3, 1)  # Round average loan size to 2 decimal places and convert to thousands
+    'Average loan size (k)' = round(sum(gbv.residual) / n_distinct(id.loan) / 1e3, 1)  # Round average loan size to 2 decimal places and convert to thousands
   )
 
+#counts and % of type loans - min mean, max gbv for each
+total.n <- nrow(Loans)
+total.gbv <- sum(Loans$gbv.residual)
+r.type.gbv <- Loans %>% group_by(type) %>% summarise('Type Cases' = n_distinct(id.loan),
+                                                     '% Cases' = paste0(round(n_distinct(id.loan)/total.n*100, 1), "%"),
+                                                     'Min GBV Residual (k)' =  round(min(gbv.residual)/ 1e3, 2),
+                                                     'Mean GBV Residual (k)' =   round(total.gbv/n_distinct(id.loan)/ 1e3, 2) ,
+                                                     'Max GBV Residual (k)' = round(max(gbv.residual)/ 1e3, 2)
+                                                       )
+r.type.gbv <- r.type.gbv %>% rename(Type = type)
+
+#counts and % of status loans - min mean, max gbv for each
+total.n <- nrow(Loans)
+total.gbv <- sum(Loans$gbv.residual)
+r.status.gbv <- Loans %>% group_by(status) %>% summarise('Status Cases' = n_distinct(id.loan),
+                                                     'Cases %' = paste0(round(n_distinct(id.loan)/total.n*100, 1), "%"),
+                                                     'Min GBV Residual (k)' =  round(min(gbv.residual)/ 1e3, 2),
+                                                     'Mean GBV Residual (k)' =   round(total.gbv/n_distinct(id.loan)/ 1e3, 2) ,
+                                                     'Max GBV Residual (k)' = round(max(gbv.residual)/ 1e3, 2)
+)
+
+#in no UTP also use this other half
+df <- data.frame('status' = "utp",
+                 'StatusCases' = 0,
+                 '%Cases' = paste0(0, "%"),
+                 'MinGBVResidual(k)' = 0,
+                 'MeanGBVResidual(k)' = 0,
+                 'MaxGBVResidual(k)' = 0
+                 )
+df <- df %>% rename('status' = "status",
+                    'Status Cases' = 'StatusCases',
+                 'Cases %' = 'X.Cases',
+                 'Min GBV Residual (k)' = 'MinGBVResidual.k.',
+                 'Mean GBV Residual (k)' = 'MeanGBVResidual.k.',
+                 'Max GBV Residual (k)' = 'MaxGBVResidual.k.'
+)
+r.status.gbv <- rbind(r.status.gbv, df)
+r.status.gbv <- r.status.gbv %>% rename(Status = status)
+
+
+# % gbv in each type class
+total.n <- nrow(Loans)
+total.gbv <- sum(Loans$gbv.residual)
+r.gbv.perc <- Loans %>% group_by(type) %>% summarise('GBV %' = round(sum(gbv.residual)/total.gbv*100, 1))
+chart.gbv.perc <- ggplot(r.gbv.perc, aes(x = type, y = `GBV %`)) +
+  geom_bar(stat = 'identity', fill = "#71EAF7", alpha = 0.7) +
+  labs(x = "Type", y = "GBV %", title= "GBV Residual % by Loan Type") + 
+  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5)
+chart.gbv.perc
+
+
+
+#cases for date.status
+Loans$year <- format(Loans$date.status, "%Y")
+r.date.status.cases <- Loans %>% group_by(year) %>% summarise("N Cases" = n_distinct(id.loan)) %>% ungroup()
+chart.date.status.cases <- ggplot(r.date.status.cases, aes(x = year, y = `N Cases`, group= 1)) +
+geom_line(stat = 'identity', color= "blue") + labs(x= "Year of State Passage", title= "Last Status Date")
+chart.date.status.cases
+
 ###-----------------------------------------------------------------------###
-#-----                     Page 27 reports                                -----         
+#-----                     loans ranges                              -----         
 ###-----------------------------------------------------------------------###
-Borrowers <- counterparties_finished %>% filter(role=='borrower') %>% distinct()
+
+quartiles <- quantile(Loans$gbv.residual, probs = c(0.25, 0.5, 0.75))
+plot(Loans$gbv.residual)
+hist(Loans$gbv.residual)
+
+#gbv ranges chart
+gbv_ranges <- c(0, 150000, 300000, 450000, Inf)  # Define the age ranges
+gbv_labels <- c("0-100k", "150k-300k", "300k-450k", "+450k")  # Define labels for the ranges
+
+#create range.gbv column, calculate the total gbv, create table with range.gbv and % of gbv per range
+df <- Loans
+df$range.gbv <- cut(df$gbv.residual, breaks = gbv_ranges, labels = gbv_labels, include.lowest = TRUE)
+total.gbv <- sum(df$gbv.residual)
+r.p28.gbvByLoanSize <- df %>% select(gbv.residual, range.gbv) %>% group_by(range.gbv) %>% 
+  summarise("GBV %" = round(sum(gbv.residual) / total.gbv *100, 1))
+
+r.p28.g.gbvByLoanSize <- ggplot(r.p28.gbvByLoanSize, aes(x = range.gbv, y = `GBV %`)) +
+  geom_bar(stat = 'identity', fill = "#71EAF7", alpha = 0.7) +
+  labs(x = "GBV Ranges", y = "GBV %", title= "GBV Residual % by Loan Size") + 
+  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5)
+r.p28.g.gbvByLoanSize
+
+
+gg <- ggplot(Loans, aes(x = gbv.residual)) +
+  geom_histogram(binwidth = 150000, fill = "lightblue", color = "#71EAF7") +
+  xlab("GBV Amount") +
+  ylab("N Loans") +
+  ggtitle("Number of Loans by Amount")
+gg
+
+
+
+
+
+
+
+
+###-----------------------------------------------------------------------###
+#-----                     borrowers                               -----         
+###-----------------------------------------------------------------------###
+Borrowers <- counterparty_finished %>% filter(role=='borrower') %>% distinct()
 Borrowers <- left_join(Borrowers,Loans, by = "id.bor",relationship = "many-to-many")
-Borrowers <- left_join(Borrowers,link_table_entities_counterparties,by = "id.counterparty",relationship = "many-to-many")
-Borrowers <- Borrowers %>% distinct(id.bor, id.loans, .keep_all = TRUE)
-Borrowers <- left_join(Borrowers,entities_complete, by = "id.entities")
+Borrowers <- left_join(Borrowers,link_entity_counterparty,by = "id.counterparty",relationship = "many-to-many")
+Borrowers <- Borrowers %>% distinct(id.bor, id.loan, .keep_all = TRUE)
+Borrowers <- left_join(Borrowers,entities_complete, by = "id.entity")
 
 #% Borrowers by areas 
 total.gbv <- sum(Loans$gbv.residual)
-total.borrowers <- n_distinct(Borrowers$id.entities)
+total.borrowers <- n_distinct(Borrowers$id.entity)
 r.p27.geographicalDistribution <- Borrowers %>%
   mutate(
     area = case_when(
@@ -84,9 +183,9 @@ r.p27.geographicalDistribution <- Borrowers %>%
       area == "north-east" ~ "north-east",
       area == "north-west" ~ "north-west"
     )) %>%
-  select(id.entities, area, gbv.residual) %>%
+  select(id.entity, area, gbv.residual) %>%
   group_by(area) %>%
-  summarise("Borrower %" = round(n_distinct(id.entities) / total.borrowers * 100, 1),
+  summarise("Borrower %" = round(n_distinct(id.entity) / total.borrowers * 100, 1),
             "GBV %" = round(sum(gbv.residual) / total.gbv * 100, 1)
             )
 r.p27.borrowerByArea <- ggplot(r.p27.geographicalDistribution, aes(x = area, y = `Borrower %`)) +
@@ -100,6 +199,56 @@ r.p27.gbvByArea <- ggplot(r.p27.geographicalDistribution, aes(x = area, y = `GBV
   labs(x = "Area", y = "GBV %", title= "GBV % per Area") + 
   geom_text(aes(label = `GBV %`), vjust = 0.5, size = 5)
 r.p27.gbvByArea
+
+
+#table n.entities per borrower
+total.n <- n_distinct(Borrowers$id.counterparty)
+total.gbv <- sum(Borrowers$gbv.residual)
+r.borrower.n.entities <- Borrowers %>% group_by(n.entities) %>% summarise('Borrowers' = n_distinct(id.counterparty),
+                                                     '% Cases' = paste0(round(n_distinct(id.counterparty)/total.n*100, 1), "%"),
+                                                     'Min GBV Residual (k)' =  round(min(gbv.residual)/ 1e3, 2),
+                                                     'Mean GBV Residual (k)' =   round(total.gbv/n_distinct(id.counterparty)/ 1e3, 2) ,
+                                                     'Max GBV Residual (k)' = round(max(gbv.residual)/ 1e3, 2)
+)
+r.borrower.n.entities <- r.borrower.n.entities %>% rename("N Entities" = n.entities)
+
+
+#table N borrowers with N loans
+
+df <- Borrowers %>% group_by(id.counterparty) %>% summarise("N Loans per Borrower"= n_distinct(id.loan),
+                                                            "GBV Sum" = sum(gbv.residual))
+
+r.n.borrowers.n.loans <- df %>% group_by(`N Loans per Borrower`) %>% summarise("Borrowers"= n_distinct(id.counterparty),
+                                                            "GBV Residual Sum (k)" = sum(`GBV Sum`)/1e3)
+
+
+
+entities_merged <- entities_complete %>% merge(link_entity_counterparty, by= "id.entity")
+entities_merged2 <- entities_merged %>% merge(counterparty_finished, by="id.counterparty")
+entities_merged2 <- entities_merged2 %>% filter(role== "borrower")
+
+# n. borrowers by type
+total.borrowers <- n_distinct(entities_merged2$id.counterparty)
+r.type.subject.n.cases <- entities_merged2 %>% group_by(type.subject) %>% summarise("N Borrowers" = n_distinct(id.counterparty),
+                                                                  "Borrower %" = paste0(round(n_distinct(id.counterparty) / total.borrowers * 100, 1), "%"))
+r.type.subject.n.cases <- r.type.subject.n.cases %>% rename("Borrower Type" = type.subject)
+
+
+#age range borrowers
+individuals <- entities_merged2 %>% filter(type.subject == "individual")
+individuals_distinct <- individuals[!duplicated(individuals[c("id.counterparty")]), ]
+total.individuals <- nrow(individuals_distinct)
+
+r.individuals.range.age <- individuals_distinct %>% group_by(range.age) %>% 
+  summarise("N Borrowers"= n_distinct(id.counterparty),
+            "Borrower %" = paste0(round(n_distinct(id.counterparty) / total.individuals * 100, 1), "%"))
+
+r.individuals.range.age <- r.individuals.range.age %>% rename("Age Range" = range.age)
+
+
+
+
+
 
 
 #GBV by borrower province
@@ -135,38 +284,7 @@ r.p27.borrowersByProvince.top.5 <- ggplot(r.p27.borrowersByProvince.head, aes(x 
   geom_text(aes(label = sum_gbv), vjust = 1, size = 5)
 r.p27.borrowersByProvince.top.5
 
-###-----------------------------------------------------------------------###
-#-----                     Page 28 report                                -----         
-###-----------------------------------------------------------------------###
 
-quartiles <- quantile(Borrowers$gbv.residual, probs = c(0.25, 0.5, 0.75))
-plot(Borrowers$gbv.residual)
-hist(Borrowers$gbv.residual)
-
-#gbv ranges chart
-gbv_ranges <- c(0, 150000, 300000, 450000, Inf)  # Define the age ranges
-gbv_labels <- c("0-100k", "150k-300k", "300k-450k", "+450k")  # Define labels for the ranges
-
-#create range.gbv column, calculate the total gbv, create table with range.gbv and % of gbv per range
-df <- Loans
-df$range.gbv <- cut(df$gbv.residual, breaks = gbv_ranges, labels = gbv_labels, include.lowest = TRUE)
-total.gbv <- sum(df$gbv.residual)
-r.p28.gbvByLoanSize <- df %>% select(gbv.residual, range.gbv) %>% group_by(range.gbv) %>% 
-  summarise("GBV %" = round(sum(gbv.residual) / total.gbv *100, 1))
-
-r.p28.g.gbvByLoanSize <- ggplot(r.p28.gbvByLoanSize, aes(x = range.gbv, y = `GBV %`)) +
-  geom_bar(stat = 'identity', fill = "#71EAF7", alpha = 0.7) +
-  labs(x = "GBV Ranges", y = "GBV %", title= "GBV Residual % by Loan Size") + 
-  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5)
-r.p28.g.gbvByLoanSize
-
-
-gg <- ggplot(Borrowers, aes(x = gbv.residual)) +
-  geom_histogram(binwidth = 150000, fill = "lightblue", color = "black") +
-  xlab("GBV Amount") +
-  ylab("Loans Number") +
-  ggtitle("Loans Number by Amount")
-gg
 
 ###-----------------------------------------------------------------------###
 #-----                profiling  info providing pf                       -----         
@@ -219,7 +337,7 @@ chart.info.pf.solvency.region <- infoprov_pf_final %>%
 my.palette <- c("#97FFFF", "#79CDCD", "#528B8B")
 
 chart.solvency.class.cases <- ggplot(chart.info.pf.solvency.region, aes(x = solvency.adj, y= cases)) +  
-  geom_col(aes(fill = solvency.adj), color= "black") +  
+  geom_col(aes(fill = solvency.adj)) +  
   labs(title = "Solvency Adjusted N Cases", x = "Solvency Type", y= "N Cases") +  
   scale_fill_manual(values = my.palette) + geom_text(aes(label = cases), vjust = 1.5, size = 5)
 chart.solvency.class.cases
@@ -227,14 +345,15 @@ chart.solvency.class.cases
 #mean income.net per solvency type
 table.info.income.solvency <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
   group_by(solvency.adj) %>% 
-  summarise(mean_income = mean(income.net))
+  summarise(mean_income = round(mean(income.net)/1e3, 1))
 table.info.income.solvency <- table.info.income.solvency %>% rename("Solvency Type" = solvency.adj,
-                                                                    "Mean Net Income" = mean_income)
+                                                                    "Mean Net Income (k)" = mean_income)
+
 
 table.info.income.region <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
-  group_by(region) %>% summarise(mean_income = mean(income.net)) %>% arrange(desc(mean_income))
+  group_by(region) %>% summarise(mean_income = round(mean(income.net)/1e3, 1)) %>% arrange(desc(mean_income))
 table.info.income.region <- table.info.income.region %>% rename("Region" = region,
-                                                                    "Mean Net Income" = mean_income)
+                                                                    "Mean Net Income (k)" = mean_income)
 
 #infoprov_piva_final 
 #% of status per type of corporate

@@ -61,3 +61,5 @@ columns_to_convert <- c("date.origination", "date.last.act")
 Loans[columns_to_convert] <- lapply(Loans[columns_to_convert], as.Date)
 
 Loans$flag.imputed <- as.integer(Loans$flag.imputed)
+
+Loans <- Loans %>% rename(id.loan = id.loans)

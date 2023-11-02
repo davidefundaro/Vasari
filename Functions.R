@@ -236,7 +236,7 @@ add_type.pg_column <- function(data) {
         str_detect(name, " ss |s.s|s.s.|societa' semplice")  ~ "ss",
         str_detect(name, " sas |s.a.s|s.a.s.")  ~ "sas",
         str_detect(name, "snc|s.n.c|s.n.c.|sncs")  ~ "snc",
-        str_detect(name, " sc |s.c|s.c.|scs|consor|sportiva")  ~ "sc",
+        str_detect(name, " sc |s.c|s.c.|scs|cons|consor|sportiva|associazionesportiva|cooperativa|coop")  ~ "sc",
         TRUE ~ "Other"  # Catch-all condition for "corporate"
       ),
       TRUE ~ NA_character_
