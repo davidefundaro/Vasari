@@ -1,7 +1,17 @@
 source("Functions_Orange.R")
 
 
-
+theme_white_but_border <- function (base_size = 11, base_family = "") {
+  theme_bw() %+replace% 
+    theme(
+      panel.grid.major  = element_line(color = "white"),
+      panel.background = element_rect(fill = "white"),
+      panel.border = element_rect(color = "black", fill = NA),
+      axis.line = element_line(color = "black"),
+      axis.ticks = element_line(color = "black"),
+      axis.text = element_text(color = "black")
+    )
+}
 
 
 
@@ -144,8 +154,10 @@ chart.gbv.perc
 Loans$year <- format(Loans$date.status, "%Y")
 r.date.status.cases <- Loans %>% group_by(year) %>% summarise("N Cases" = n_distinct(id.loan)) %>% ungroup()
 chart.date.status.cases <- ggplot(r.date.status.cases, aes(x = year, y = `N Cases`, group= 1)) +
-geom_bar(stat = 'identity', color= "blue") + labs(x= "Year of State Passage", y= "N Loans",
-                                                  title= "Last Status Date")
+geom_bar(stat = 'identity', fill = "slategray", color= "blue") + 
+  labs(x= "Year of State Passage", y= "N Loans",title= "Last Status Date") + 
+  geom_text(aes(label = paste0( "[",`N Cases`, "]"), y=47), size = 4) + theme_white_but_border() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 chart.date.status.cases
 
 ###-----------------------------------------------------------------------###
@@ -170,15 +182,17 @@ r.p28.gbvByLoanSize <- df %>% select(gbv.residual, range.gbv) %>% group_by(range
 r.p28.g.gbvByLoanSize <- ggplot(r.p28.gbvByLoanSize, aes(x = range.gbv, y = `GBV %`)) +
   geom_bar(stat = 'identity', fill = "slategray", color = "blue") +    #71EAF7
   labs(x = "GBV Ranges", y = "GBV %", title= "GBV Residual % by Loan Size") + 
-  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5, color= "white")
+  geom_text(aes(label = paste0("[",`GBV %`, "%", "]"), y=52), size = 4, color= "black") + geom_rangeframe() +
+  theme_white_but_border()#+ bbc_style()
 r.p28.g.gbvByLoanSize
 
 
 gg <- ggplot(Loans, aes(x = gbv.residual)) +
-  geom_histogram(binwidth = 150000, color = "blue") +
+  geom_histogram(binwidth = 150000, fill = "slategray", color = "blue") +
   xlab("GBV Amount") +
   ylab("N Loans") +
-  ggtitle("Number of Loans by Amount")
+  ggtitle("Number of Loans by Amount") + 
+  theme_white_but_border()
 gg
 
 
@@ -211,13 +225,13 @@ r.p27.geographicalDistribution <- Borrowers %>%
 r.p27.borrowerByArea <- ggplot(r.p27.geographicalDistribution, aes(x = area, y = `Borrower %`)) +
   geom_bar(stat = 'identity', fill = "#79CDCD") +
   labs(x = "Area", y = "Borrowers %", title= "Borrowers % per Area") + 
-  geom_text(aes(label = `Borrower %`), vjust = 0.5, size = 5)
+  geom_text(aes(label = paste0("[",`Borrower %`, "%", "]"), y = 95), vjust = 0.5, size = 4) + theme_white_but_border()
 r.p27.borrowerByArea
 
 r.p27.gbvByArea <- ggplot(r.p27.geographicalDistribution, aes(x = area, y = `GBV %`)) +
   geom_bar(stat = 'identity', fill = "#66CDAA") +
   labs(x = "Area", y = "GBV %", title= "GBV % per Area") + 
-  geom_text(aes(label = `GBV %`), vjust = 0.5, size = 5)
+  geom_text(aes(label = paste0("[",`GBV %`, "%","]"), y= 74), vjust = 0.5, size = 4) + theme_white_but_border()
 r.p27.gbvByArea
 
 
@@ -385,8 +399,10 @@ my.palette <- c("#97FFFF", "#79CDCD", "#528B8B")
 
 chart.solvency.class.cases <- ggplot(chart.info.pf.solvency.region, aes(x = solvency.adj, y= cases)) +  
   geom_col(aes(fill = solvency.adj)) +  
-  labs(title = "Solvency Adjusted N Cases", x = "Solvency Type", y= "N Cases") +  
-  scale_fill_manual(values = my.palette) + geom_text(aes(label = cases), vjust = 1.5, size = 5)
+  labs(title = "Solvency Adjusted N Cases", x = "Solvency Type", y= "N Cases", color= "brrr") + 
+  guides(fill=guide_legend(title="Solvency Type")) +
+  scale_fill_manual(values = my.palette) + geom_text(aes(label = paste0( "[",cases, "]"), y=122), size = 4) +
+  theme_white_but_border() 
 chart.solvency.class.cases
 
 #mean income.net per solvency type
@@ -473,7 +489,8 @@ agreement.proj.period <- agreement.proj.period %>% group_by(year_month) %>%
 
 chart.date.amount.paid <- ggplot(agreement.proj.period, aes(x = year_month, y = `Amount Paid`, group= 1)) +
   geom_line(stat = 'identity', color= "blue") + labs(x= "Year and Month", y="Amount", title= "Payback") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_white_but_border() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) #+ bbc_style()
 chart.date.amount.paid
 
 

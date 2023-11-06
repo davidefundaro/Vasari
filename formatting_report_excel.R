@@ -14,7 +14,7 @@ ReportTitleStyle <- createStyle(fontSize = 20,textDecoration = c('bold','underli
 titleStyle <- createStyle(fontSize = 14, textDecoration = "bold", border = "Bottom", borderColour = "black")
 header_style <- createStyle(fontColour = "white", fgFill = "#6495ED", border = "TopBottom",
                             textDecoration = "bold", fontSize = 12)
-total_style <- createStyle(fontSize = 12, fgFill = "#66CDAA", halign = "right")
+total_style <- createStyle(fontSize = 12, fgFill = "#7FFFD4", halign = "right") #7FFFD4 #66CDAA
 even_row_style <- createStyle(fontSize = 12, fgFill = "honeydew", halign = "right") #63B8FF skyblue1
 odd_row_style <- createStyle(fontSize = 12, fgFill = "#DFEBF4", halign = "right")
 custom_format <- createStyle(numFmt = "0.0,\"k\"")
@@ -129,7 +129,7 @@ create_table_with_totals(wb, "Report_Loans", r.p31.gbvByGuaranteePresence, "Guar
 create_table_with_totals(wb, "Report_Loans", r.p31.gbvByGuaranteedType, "Guarantee Type", 7, 30) #5 rows
 
 
-r.p31.gbvByGuaranteedType
+
 ggsave("Charts/gbv_residual_%_loan_size.png",plot = r.p28.g.gbvByLoanSize)
 insertImage(wb,sheet = "Report_Loans","Charts/gbv_residual_%_loan_size.png",startCol = 13, startRow = 8, width = 6, height = 4.5, dpi = 300)
 ggsave("Charts/histogram_loans_amount.png",plot = gg)
