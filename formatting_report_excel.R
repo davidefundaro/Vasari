@@ -15,7 +15,7 @@ titleStyle <- createStyle(fontSize = 14, textDecoration = "bold", border = "Bott
 header_style <- createStyle(fontColour = "white", fgFill = "#6495ED", border = "TopBottom",
                             textDecoration = "bold", fontSize = 12)
 total_style <- createStyle(fontSize = 12, fgFill = "#66CDAA", halign = "right")
-even_row_style <- createStyle(fontSize = 12, fgFill = "skyblue1", halign = "right") #63B8FF
+even_row_style <- createStyle(fontSize = 12, fgFill = "honeydew", halign = "right") #63B8FF skyblue1
 odd_row_style <- createStyle(fontSize = 12, fgFill = "#DFEBF4", halign = "right")
 custom_format <- createStyle(numFmt = "0.0,\"k\"")
 
@@ -123,10 +123,13 @@ for(i in 1:nrow(df)){
 #create_table_k_for_miles(wb, "Report", r.introductionP6, "Summary", 3, 5)
 
 create_table_no_k(wb, "Report_Loans", r.introductionP6, "Summary", 3, 10) #3 rows
-create_table_with_totals(wb, "Report_Loans", r.type.gbv, "Loans by Type", 3, 14) #5 rows
+create_table_with_totals(wb, "Report_Loans", r.type.gbv, "Loans by Type", 3, 15) #5 rows
 create_table_with_totals(wb, "Report_Loans", r.status.gbv, "Loans by Status", 3, 23) #4 rows
-#create_table_no_k(wb, "Report_Loans", Profile_Numeric, "Profile Numeric", 3, 31) #8 rows
+create_table_with_totals(wb, "Report_Loans", r.p31.gbvByGuaranteePresence, "Guarantee Status", 3, 30) #5 rows
+create_table_with_totals(wb, "Report_Loans", r.p31.gbvByGuaranteedType, "Guarantee Type", 7, 30) #5 rows
 
+
+r.p31.gbvByGuaranteedType
 ggsave("Charts/gbv_residual_%_loan_size.png",plot = r.p28.g.gbvByLoanSize)
 insertImage(wb,sheet = "Report_Loans","Charts/gbv_residual_%_loan_size.png",startCol = 13, startRow = 8, width = 6, height = 4.5, dpi = 300)
 ggsave("Charts/histogram_loans_amount.png",plot = gg)
@@ -168,8 +171,8 @@ addStyle(wb,sheet = "Report_Infoproviding",style = ReportTitleStyle,1,1)
 
 #apply the functions as follows:   workbook, "sheetname", dataframe, "table title", ncol, nrow
 #create_table_k_for_miles(wb, "Report", r.introductionP6, "Summary", 3, 5)
-create_table_no_k(wb, "Report_Infoproviding", table.info.income.solvency, "Net Income per Solvency", 3, 5) #6 rows
-create_table_no_k(wb, "Report_Infoproviding", table.info.income.region, "Net Income per Region", 6, 5) #7 rows
+create_table_with_totals(wb, "Report_Infoproviding", table.info.income.solvency, "Net Income per Solvency", 3, 5) #6 rows
+create_table_with_totals(wb, "Report_Infoproviding", table.info.income.region, "Net Income per Region", 6, 5) #7 rows
 create_table_no_k(wb, "Report_Infoproviding", table.info.piva.type, "% Status Cases per Corporate Type", 3, 18) #8 rows
 #create_table_no_k(wb, "Report_Infoproviding", table.info.piva.status.region, "N Status Cases per Region", 3, 71) #10 rows
 
@@ -188,6 +191,7 @@ addStyle(wb,sheet = "Report_Agreement",style = ReportTitleStyle,1,1)
 #apply the functions as follows:   workbook, "sheetname", dataframe, "table title", ncol, nrow
 #create_table_k_for_miles(wb, "Report", r.introductionP6, "Summary", 3, 5)
 create_table_with_totals(wb, "Report_Agreement", agreement.summary.status, "Agreement Status Payments", 3, 5) #6 rows
+create_table_with_totals(wb, "Report_Agreement", agreement.summary.n.cases.status, "N agreements and Mean Instalments per Status", 3, 15) #7 rows
 
 
 ggsave("Charts/chart.date.amount.paid.png",plot = chart.date.amount.paid)

@@ -170,7 +170,7 @@ r.p28.gbvByLoanSize <- df %>% select(gbv.residual, range.gbv) %>% group_by(range
 r.p28.g.gbvByLoanSize <- ggplot(r.p28.gbvByLoanSize, aes(x = range.gbv, y = `GBV %`)) +
   geom_bar(stat = 'identity', fill = "slategray", color = "blue") +    #71EAF7
   labs(x = "GBV Ranges", y = "GBV %", title= "GBV Residual % by Loan Size") + 
-  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5)
+  geom_text(aes(label = `GBV %`), vjust = 2.5, size = 5, color= "white")
 r.p28.g.gbvByLoanSize
 
 
@@ -390,15 +390,23 @@ chart.solvency.class.cases <- ggplot(chart.info.pf.solvency.region, aes(x = solv
 chart.solvency.class.cases
 
 #mean income.net per solvency type
+table.info.income.solvency.totals <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
+  summarise(solvency.adj = "total", mean_income = round(mean(income.net), 1))
 table.info.income.solvency <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
   group_by(solvency.adj) %>% 
   summarise(mean_income = round(mean(income.net), 1))
+table.info.income.solvency <- rbind(table.info.income.solvency.totals, table.info.income.solvency)
 table.info.income.solvency <- table.info.income.solvency %>% rename("Solvency Type" = solvency.adj,
                                                                     "Mean Net Income" = mean_income)
 
 
+
+table.info.income.region.totals <- infoprov_pf_final %>% filter(!is.na(income.net)) %>% 
+  summarise(region = "total", mean_income = round(mean(income.net), 1))
+
 table.info.income.region <- infoprov_pf_final %>% filter(!is.na(income.net)) %>%
   group_by(region) %>% summarise(mean_income = round(mean(income.net), 1)) %>% arrange(desc(mean_income))
+table.info.income.region <- rbind(table.info.income.region.totals, table.info.income.region)
 table.info.income.region <- table.info.income.region %>% rename("Region" = region,
                                                                     "Mean Net Income" = mean_income)
 
@@ -447,9 +455,9 @@ agreement.summary.status.totals <- agreement.summary.status %>%
             "% of Payback" = paste0(round(sum(paid)/sum(amount.agreement)*100,1), "%"))
 
 agreement.summary.status <- agreement.summary.status %>% group_by(status) %>% 
-  summarise("GBV Mean" = round(mean(gbv.agreement),1), "GBV sd" = round(sd(gbv.agreement),1),
+  summarise("GBV Mean" = round(sum(gbv.agreement)/n(),1), "GBV sd" = round(sd(gbv.agreement),1),
             "GBV Sum" = round(sum(gbv.agreement),1),
-            "Amount Mean" = mean(amount.agreement), "Amount sd" = round(sd(amount.agreement),1),
+            "Amount Mean" = sum(amount.agreement)/n(), "Amount sd" = round(sd(amount.agreement),1),
             "Amount Sum" = sum(amount.agreement),
             Months = mean(length), "Sum Amount Paid" = sum(paid), 
             "% of Payback" = paste0(round(sum(paid)/sum(amount.agreement)*100,1), "%"))
@@ -470,8 +478,17 @@ chart.date.amount.paid
 
 
 
+agreement.summary.n.cases.status <- Agreement_Summary 
 
+agreement.summary.n.cases.status.totals <- agreement.summary.n.cases.status %>% 
+  summarise(status = "total", "N Agreements" = n(), "Mean Instalments" = mean(n.instalment))
 
+agreement.summary.n.cases.status <- agreement.summary.n.cases.status %>% group_by(status) %>% summarise(
+  "N Agreements" = n(), "Mean Instalments" = mean(n.instalment)
+)
+
+agreement.summary.n.cases.status <- rbind(agreement.summary.n.cases.status.totals, agreement.summary.n.cases.status)
+agreement.summary.n.cases.status <- agreement.summary.n.cases.status %>% rename(Status = status)
 
 
 
@@ -512,15 +529,22 @@ r.p29.g.loansByDefaultVintage
 ###-----------------------------------------------------------------------###
 #-----                     Page 31 report                                -----         
 ###-----------------------------------------------------------------------###
-df <- merge(LOANS, original.GuaranteesData[,c("id.loan", "guarantee.type")], by = "id.loan", all.x= TRUE)
+garanzia <- garanzie_cleaned %>% rename(id.loan = numero.rapporto.garantito)
+df <- merge(Loans, garanzia[,c("id.loan", "descrizione.garanzia")], by = "id.loan", all.x= TRUE)
 df <- df %>%
   distinct(id.loan, .keep_all = TRUE)
-df$guarantee.presence <- ifelse(!is.na(df$guarantee.type), "guaranteed", "not guaranteed")
+df$guarantee.presence <- ifelse(!is.na(df$descrizione.garanzia), "guaranteed", "not guaranteed")
+total.gbv <- sum(df$gbv.residual)
+
+r.p31.gbvByGuaranteePresence.totals <- df %>% summarise(guarantee.presence = "total", "N Loans" = n(), "GBV %" = paste0(round(sum(gbv.residual) / total.gbv * 100, 1), "%"))
 
 r.p31.gbvByGuaranteePresence <- df %>%
-  select(gbv.residual, guarantee.presence) %>%
+  #select(gbv.residual, guarantee.presence) %>%
   group_by(guarantee.presence) %>%
-  summarise("GBV %" = round(sum(gbv.residual) / total.gbv * 100, 2))
+  summarise("N Loans" = n(), "GBV %" = paste0(round(sum(gbv.residual) / total.gbv * 100, 1), "%"))
+
+r.p31.gbvByGuaranteePresence <- rbind(r.p31.gbvByGuaranteePresence.totals, r.p31.gbvByGuaranteePresence)
+r.p31.gbvByGuaranteePresence <- r.p31.gbvByGuaranteePresence %>% rename("Guarantee Status"=guarantee.presence)
 
 #gbv % per guaranteed and no guaranteed
 custom_colors <- c("#054A53", "#ACDBE1")
@@ -538,8 +562,24 @@ r.p31.g.gbvByGuaranteePresence
 df1 <- df %>%
   filter(guarantee.presence == "guaranteed")
 total.guaranteed.gbv <- sum(df1$gbv.residual)
-r.p31.gbvByGuaranteedType <- df1 %>% select(gbv.residual, guarantee.type) %>% group_by(guarantee.type) %>% 
-  summarise("GBV %" = round(sum(gbv.residual) / total.guaranteed.gbv *100, 2))
+
+df1 <- df1 %>%
+  mutate(descrizione.garanzia = case_when(
+    str_detect(descrizione.garanzia, "fideiussione")  ~ "surety",
+    descrizione.garanzia == "effetto in bianco"  ~ "surety",
+    TRUE ~ "pledge"  # Catch-all condition for "corporate"
+  ))
+r.p31.gbvByGuaranteedType.totals <- df1 %>% 
+  summarise(descrizione.garanzia = "total", "N Loans" = n(), "GBV %" = paste0(round(sum(gbv.residual) / total.guaranteed.gbv *100, 1), "%"))
+
+r.p31.gbvByGuaranteedType <- df1 %>% group_by(descrizione.garanzia) %>% 
+  summarise("N Loans" = n(), "GBV %" = paste0(round(sum(gbv.residual) / total.guaranteed.gbv *100, 1), "%"))
+
+r.p31.gbvByGuaranteedType <- rbind(r.p31.gbvByGuaranteedType.totals, r.p31.gbvByGuaranteedType)
+r.p31.gbvByGuaranteedType <- r.p31.gbvByGuaranteedType %>% rename("Guarantee Type" = descrizione.garanzia)
+
+
+
 
 r.p31.g.gbvByGuaranteedType <- ggplot(r.p31.gbvByGuaranteedType, aes(x = guarantee.type, y = `GBV %`)) +
   geom_bar(stat = 'identity', fill = "#71EAF7", alpha = 0.7) +
