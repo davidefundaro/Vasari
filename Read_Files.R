@@ -28,3 +28,13 @@ paths_content <- readLines("File/file_paths.txt")
 infoprovide_piva_line <- grep("^Worksheet", paths_content)
 infoprovide_piva_value <- sub("^Worksheet=\\s*", "", paths_content[infoprovide_piva_line])
 infoproviding_piva <- read_excel(infoprovide_piva_value, sheet = "Worksheet")
+
+paths_content <- readLines("File/file_paths.txt")
+pdr_line <- grep("PDR", paths_content)
+pdr_value <- sub("^PDR=\\s*", "", paths_content[pdr_line])
+pdr <- read_excel(pdr_value, sheet = "PDR")
+
+paths_content <- readLines("File/file_paths.txt")
+incassi_line <- grep("^incassi", paths_content)
+incassi_value <- sub("^incassi=\\s*", "", paths_content[incassi_line])
+incassi <- read_excel(incassi_value, sheet = "Incassi")
